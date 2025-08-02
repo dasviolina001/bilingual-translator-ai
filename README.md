@@ -31,6 +31,17 @@ project/
     └── index.html
 ```
 
+### 🔗 Model Files
+
+Due to file size limits on GitHub, all trained model files are available via Google Drive:
+
+📁 [Download Trained Models (encoder/decoder .pth files)](https://drive.google.com/drive/folders/1ruo0E7GBQ6thgSCgtSlWHZ7xOHuFUusF?usp=drive_link)
+
+Make sure to:
+- Download all files from the link above
+- Place them inside a folder named `models` in your project root directory
+
+
 ## 🚀 How to Run
 
 ### 1. Clone the repository
