@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Virtual Translation Robot Girl</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ffeef2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 40px;
+    }
+
+    .container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #ff3399;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 16px;
+      color: #666;
+      margin-top: -10px;
+      margin-bottom: 30px;
+    }
+
+    .robot {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      background-color: #ffb6c1;
+      border-radius: 50%;
+      margin: 0 auto 30px auto;
+    }
+
+    .eye {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background-color: white;
+      border-radius: 50%;
+      top: 60px;
+      animation: blink 4s infinite;
+    }
+
+    .eye.left { left: 35px; }
+    .eye.right { right: 35px; }
+
+    .pupil {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #ff1493;
+      border-radius: 50%;
+      top: 10px;
+      left: 10px;
+    }
+
+    .nose {
+      position: absolute;
+      top: 105px;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      background-color: #ff1493;
+      border-radius: 50%;
+      transform: translateX(-50%);
+    }
+
+    .mouth {
+      position: absolute;
+      top: 135px;
+      left: 50%;
+      width: 60px;
+      height: 20px;
+      background-color: #ff699b;
+      border-radius: 20px;
+      transform: translateX(-50%);
+      transition: height 0.3s ease;
+    }
+
+    .mouth.talking {
+      height: 35px;
+      transition: height 0.2s ease;
+    }
+
+    @keyframes blink {
+      0%, 97%, 100% { height: 30px; }
+      98%, 99% { height: 5px; }
+    }
+
+    textarea {
+      width: 90%;
+      height: 100px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      resize: none;
+    }
+
+    .buttons {
+      margin-top: 20px;
+    }
+
+    select, button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: #ff66b2;
+      color: white;
+    }
+
+    #output {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      min-height: 50px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Translation Robot Girl</h1>
+    <h2>English to Assamese/Bodo Translator</h2>
+
+    <div class="robot" id="robotFace">
+      <div class="eye left"><div class="pupil"></div></div>
+      <div class="eye right"><div class="pupil"></div></div>
+      <div class="nose"></div>
+      <div class="mouth" id="robotMouth"></div>
+    </div>
+
+    <textarea id="inputText" placeholder="Type your English sentence here..."></textarea>
+
+    <div class="buttons">
+      <select id="langSelect">
+        <option value="assamese">Assamese</option>
+        <option value="bodo">Bodo</option>
+      </select>
+      <button onclick="translateText()">Translate</button>
+      <button onclick="speakText()">Speak Translation 🔊</button>
+    </div>
+
+    <div id="output">Translation will appear here...</div>
+  </div>
+
+  <script>
+    function translateText() {
+      const text = document.getElementById('inputText').value;
+      const lang = document.getElementById('langSelect').value;
+
+      fetch('/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sentence: text, language: lang })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.translated) {
+          document.getElementById('output').innerText = data.translated;
+        } else {
+          document.getElementById('output').innerText = 'Translation failed!';
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('output').innerText = 'Error connecting to server.';
+      });
+    }
+
+    function speakText() {
+      const text = document.getElementById('output').innerText;
+      const mouth = document.getElementById("robotMouth");
+
+      if (!text.trim()) return;
+
+      mouth.classList.add("talking");
+
+      fetch('/speak', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: text })
+      })
+      .then(response => response.blob())
+      .then(blob => {
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+
+        audio.onended = () => {
+          mouth.classList.remove("talking");
+        };
+
+        audio.play();
+      })
+      .catch(err => {
+        console.error('TTS Error:', err);
+        mouth.classList.remove("talking");
+      });
+    }
+  </script>
+</body>
+</html>
